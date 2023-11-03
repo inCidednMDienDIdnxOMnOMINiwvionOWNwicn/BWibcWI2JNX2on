@@ -1,5 +1,43 @@
-local HttpService = game:GetService("HttpService")
-local gameluaurl = "https://raw.githubusercontent.com/inCidednMDienDIdnxOMnOMINiwvionOWNwicn/BWibcWI2JNX2on/main/game.lua"
+local RoUrl = {}
+
+local httpService = game:GetService("HttpService")
+
+function RoUrl.get(url, callback)
+    local success, result = pcall(function()
+        return httpService:GetAsync(url)
+    end)
+
+    if success then
+        callback(result)
+    else
+        warn("Failed to fetch URL: " .. result)
+        callback(nil)
+    end
+end
+
+function downloadAndSaveContent(url, filePath)
+    RoUrl.get(url, function(content)
+        if content then
+            local writeSuccess, errorMsg = pcall(function()
+                writefile(filePath, content)
+            end)
+
+            if writeSuccess then
+                print("Successfully downloaded and saved content to " .. filePath)
+            else
+                warn("Failed to write content to file. Error:", errorMsg)
+            end
+        else
+            warn("Downloaded content is nil; unable to save it to the file.")
+        end
+    end)
+end
+
+local githubRawURL = "https://raw.githubusercontent.com/inCidednMDienDIdnxOMnOMINiwvionOWNwicn/BWibcWI2JNX2on/main/game.lua"
+
+local gameFilePath = "SC 0.1/Modules/game.lua"
+
+downloadAndSaveContent(githubRawURL, gameFilePath)
 
 function scdownload()
     if not isfolder("SC 0.1") then 
@@ -149,26 +187,6 @@ function moduleexecution(modulename)
         end
     else
         warn(modulename .. " does not exist!")
-    end
-end
-
-function contentthing(url, path)
-    local sc, content = pcall(function()
-        return HttpService:GetAsync(url)
-    end)
-
-    if sc then
-        local ws, es = pcall(function()
-            writefile(path, content)
-        end)
-
-        if ws then
-            print("Successfully downloaded and saved content to " .. path)
-        else
-            warn("Failed to write content to file. Error:", es)
-        end
-    else
-        warn("Failed to download content from URL. Error:", content)
     end
 end
 
