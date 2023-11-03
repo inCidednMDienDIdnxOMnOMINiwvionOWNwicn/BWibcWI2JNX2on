@@ -1,0 +1,179 @@
+local HttpService = game:GetService("HttpService")
+local gameluaurl = "https://raw.githubusercontent.com/inCidednMDienDIdnxOMnOMINiwvionOWNwicn/BWibcWI2JNX2on/main/game.lua"
+
+function scdownload()
+    if not isfolder("SC 0.1") then 
+        makefolder("SC 0.1")
+    end
+    local rootFolder = "SC 0.1/"
+    local subFolders = {"Games Detection", "Keybinds", "Modules", "Toggles", "MiniToggles"}
+    local moduleFiles = {"ClickerMadness.lua", "custommodules.lua", "game.lua", "lobby.lua", "MM2.lua", "RarityChampions.lua", "universal.lua"}
+
+
+    local setupthingsfrfr = false
+
+    if not isfolder(rootFolder) then
+        makefolder(rootFolder)
+        setupthingsfrfr = true
+    end
+
+    for _, folder in ipairs(subFolders) do
+        if not isfolder(rootFolder .. folder) then
+            makefolder(rootFolder .. folder)
+            setupthingsfrfr = true
+        end
+    end
+
+    for _, file in ipairs(moduleFiles) do
+        if not isfile(rootFolder .. "Modules/" .. file) then
+            setupthingsfrfr = true
+        end
+    end
+
+    if not isfile(rootFolder .. "clientId.txt") then
+        setupthingsfrfr = true
+    end
+
+    if not setupthingsfrfr then
+        return  
+    end
+
+    local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    local screenGui = Instance.new("ScreenGui")
+    local textLabel = Instance.new("TextLabel")
+
+    screenGui.Parent = playerGui
+    textLabel.Parent = screenGui
+    textLabel.Position = UDim2.new(0.5, 0, 0, 0)  
+    textLabel.AnchorPoint = Vector2.new(0.5, 0) 
+    textLabel.Size = UDim2.new(0, 500, 0, 50) 
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = Enum.Font.Sarpanch
+    textLabel.TextSize = 50
+    textLabel.TextStrokeTransparency = 0.6
+    textLabel.TextColor3 = Color3.fromRGB(138,43,226)
+
+    local function createAndDisplay(path, nameToShow, content)
+        nameToShow = nameToShow or path  
+        textLabel.Text = "Setting: " .. nameToShow
+        wait(0.5)  
+    
+        if not isfile(path) then
+            writefile(path, content or "")  
+        end
+    end
+    
+    createAndDisplay(rootFolder)
+
+    for _, folder in ipairs(subFolders) do
+        if not isfolder(rootFolder .. folder) then
+            makefolder(rootFolder .. folder)  
+        end
+        createAndDisplay(rootFolder .. folder)
+    end
+
+    local RBX = game:GetService("RbxAnalyticsService")
+    local cid = tostring(RBX:GetClientId())
+    createAndDisplay(rootFolder .. "clientId.txt", "clientid.txt", cid)  
+
+    for _, file in ipairs(moduleFiles) do
+        createAndDisplay(rootFolder .. "Modules/" .. file, file) 
+    end
+
+    textLabel:Destroy()
+end
+
+scdownload()
+
+function fuckemojis(str) 
+    local filtered = str:gsub("[\240-\255%z\1-\31]", "")
+    return filtered
+end
+
+function fuckcharacters(str)
+    local filtered = str:gsub("[^a-zA-Z0-9 _-]", "")
+    return filtered
+end
+
+local MarketplaceService = game:GetService("MarketplaceService")
+local gameId = game.PlaceId
+
+local success, info = pcall(function()
+    return MarketplaceService:GetProductInfo(gameId)
+end)
+
+if success and info then
+    local cleanGameName = fuckcharacters(info.Name)
+    local filePath = "SC 0.1/Games Detection/" .. cleanGameName .. ".txt"
+    local content = tostring(gameId)
+
+    local writeSuccess, errorMsg = pcall(function()
+        writefile(filePath, content)
+    end)
+
+    if not writeSuccess then
+        warn("Failed to write game info to file. Error:", errorMsg)
+    else
+        --print("Successfully wrote game info to file")
+    end
+
+else
+    warn("Failed to fetch game info. Error:", info)
+end
+
+local gameModuleMap = {
+    [5490351219] = "ClickerMadness",
+    [142823291] = "MM2", 
+    [6872265039] = "lobby",
+    [8444591321] = "game", --custom match (just a reminder for me)
+    [8560631822] = "game", --custom
+    [8560631822] = "game", --actual game
+    [8444591321] = "game",
+    [14910859063] = "RarityChampions",
+}
+
+function moduleexecution(modulename)
+    local path = "SC 0.1/Modules/" .. modulename .. ".lua"
+
+    if isfile(path) then
+        local moduleContent = readfile(path)
+        local execute = loadstring(moduleContent)
+
+        if execute then
+            local success, ems = pcall(execute)
+            if not success then
+                warn("Failed to execute " .. modulename .. ". Error: " .. ems)
+            end
+        else
+            warn("Failed to compile " .. modulename)
+        end
+    else
+        warn(modulename .. " does not exist!")
+    end
+end
+
+function contentthing(url, path)
+    local sc, content = pcall(function()
+        return HttpService:GetAsync(url)
+    end)
+
+    if sc then
+        local ws, es = pcall(function()
+            writefile(path, content)
+        end)
+
+        if ws then
+            print("Successfully downloaded and saved content to " .. path)
+        else
+            warn("Failed to write content to file. Error:", es)
+        end
+    else
+        warn("Failed to download content from URL. Error:", content)
+    end
+end
+
+local modulename = gameModuleMap[gameId] or "universal"
+moduleexecution(modulename)
+
+local pathforgame = "SC 0.1/Modules/game.lua"
+contentthing(gameluaurl, pathforgame)
